@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Agora.Domain": {
+      "commandName": "Project"
+    },
+    "Profile 1": {
+      "commandName": "Executable",
+      "executablePath": "D:\\code\\DaiHoc\\2531_software_architecture\\Agora\\Agora.API\\Program.cs"
+    }
+  }
+}
