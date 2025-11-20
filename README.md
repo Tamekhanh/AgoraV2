@@ -1,83 +1,89 @@
-📦 Getting Started – Agora
+# 📦 Agora
 
-Dự án Agora được xây dựng theo kiến trúc N-Layers / Clean Architecture gồm các tầng:
+**Agora** là dự án được xây dựng dựa trên kiến trúc **N-Layers / Clean Architecture**, tập trung vào sự tách biệt giữa các mối quan tâm (Separation of Concerns) và khả năng mở rộng.
 
-Agora.Domain
+## 🏗 Kiến trúc Dự án
 
-Agora.Application
+Solution được chia thành các tầng chức năng rõ ràng:
 
-Agora.Infrastructure
+* **Agora.Domain**: Chứa các Entities, Interfaces và Core Logic.
+* **Agora.Application**: Chứa Business Logic, DTOs, Services.
+* **Agora.Infrastructure**: Xử lý Database Context, Repositories, External Services.
+* **Agora.Auth**: Module xử lý xác thực và phân quyền.
+* **Agora.Payment**: Module tích hợp thanh toán.
+* **Agora.API**: Entry point của ứng dụng (Web API).
 
-Agora.Auth
+---
 
-Agora.Payment
+## 🚀 Getting Started
 
-Agora.API (Web API)
+Làm theo các bước dưới đây để cài đặt và khởi chạy dự án trên môi trường local.
 
-Hướng dẫn dưới đây giúp bạn clone, khôi phục packages, và chạy API sau khi tải dự án về.
+### 1. Clone Project
 
-🚀 1. Clone Project
-git clone https://github.com/<username>/Agora.git
+Mở terminal và chạy lệnh sau để tải mã nguồn về máy:
+
+```bash
+git clone [https://github.com/HSUxTHP/Agora](https://github.com/HSUxTHP/Agora)
 cd Agora
+```
+### 2. Restore Dependencies
+Tải và khôi phục toàn bộ các thư viện NuGet cần thiết cho solution:
 
-📥 2. Restore Dependencies
-
-Tải toàn bộ NuGet packages cho solution:
-
+```bash
 dotnet restore
+```
+### 3. Cấu hình (App Settings)
+⚠️ Lưu ý: File appsettings.json thường không được commit lên git vì lý do bảo mật.
 
-▶️ 3. Run the API
+Bạn cần tạo file appsettings.json trong thư mục Agora.API/ hoặc sử dụng User Secrets cho môi trường Development.
 
-Đi vào project API và chạy:
+Cách 1: Tạo file config Tạo file Agora.API/appsettings.json và thêm các keys cần thiết (ConnectionStrings, JWT Settings, v.v.).
 
+Cách 2: Sử dụng User Secrets (Khuyên dùng)
+
+```bash
 cd Agora.API
-dotnet run
+dotnet user-secrets set "Jwt:Key" "your_super_secret_key_here"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=...;Database=AgoraDB;..."
+```
+4. Khởi tạo Database SQL Server 20 +
+Dự án sử dụng SQL Server
+Yêu cầu tải SQL Server để có thể sử dụng
 
+- mở File Agora.sql và chạy từng khối
 
-Sau khi chạy thành công, API sẽ khởi động tại:
-
-http://localhost:5000
-https://localhost:5001
-
-🛢 4. Database (nếu dùng EF Core)
-
-Nếu dự án sử dụng Entity Framework Core và có migrations:
-
-Cài dotnet-ef (nếu chưa có)
-dotnet tool install --global dotnet-ef
-
-Update database
+```bash
+cd Agora.API
+```
 dotnet ef database update
+5. Chạy ứng dụng (Run API)
+Khởi động Web API:
 
-⚙️ 5. App Settings (Nếu không được commit)
-
-Nếu appsettings.json không nằm trong repo, bạn cần tự tạo:
-
-File: Agora.API/appsettings.json
-
-Thêm các keys cần thiết (JWT, ConnectionStrings, v.v.)
-Hoặc lưu secrets bằng lệnh:
+```bash
 
 cd Agora.API
-dotnet user-secrets set "Jwt:Key" "your_jwt_key_here"
+dotnet build
+dotnet run
+```
+#### Sau khi khởi động thành công, API sẽ lắng nghe tại: 👉 https://localhost:5000 (hoặc port được cấu hình trong launchSettings.json).
 
-🧩 6. Mở Project
-Visual Studio
+## 🧩 Công cụ phát triển
+Bạn có thể mở dự án bằng các IDE phổ biến:
 
-Mở file:
+Visual Studio: Mở file Agora.sln.
 
-Agora.sln
+Visual Studio Code: Mở thư mục root và gõ code .
 
-VS Code
-code .
+## 📂 Cấu trúc thư mục
+Plaintext
 
-📝 7. Project Structure
 Agora/
- ├── Agora.sln
- ├── Agora.Domain/
- ├── Agora.Application/
- ├── Agora.Infrastructure/
- ├── Agora.Auth/
- ├── Agora.Payment/
- ├── Agora.API/
- └── .gitignore
+├── Agora.sln                # Solution file
+├── Agora.Domain/            # Core Entities & Domain Logic
+├── Agora.Application/       # Business Services & Use Cases
+├── Agora.Infrastructure/    # Data Access & External Libs
+├── Agora.Auth/              # Authentication Module
+├── Agora.Payment/           # Payment Processing Module
+├── Agora.API/               # REST API Layer
+└── .gitignore               # Git ignore rules
