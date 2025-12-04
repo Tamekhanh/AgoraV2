@@ -1,5 +1,7 @@
 ﻿using Agora.Application.Common;
+using Agora.Application.DTOs;
 using Agora.Application.Utils;
+using Agora.Auth;
 using Agora.Domain.Entities;
 using Agora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +11,12 @@ namespace Agora.Application.Service;
 public class UserService : IUserService
 {
     private readonly AgoraDbContext _db;
+    private readonly ITokenService _tokenService;
 
-    public UserService(AgoraDbContext db)
+    public UserService(AgoraDbContext db, ITokenService tokenService)
     {
         _db = db;
+        _tokenService = tokenService;
     }
 
     // PSEUDOCODE / PLAN (detailed):
@@ -266,4 +270,27 @@ public class UserService : IUserService
     }
 
     //TODO: ĐĂNG NHẬP
+    public async Task<LoginResponse> Login(LoginRequest req)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == req.Email);
+        if (user == null)
+        {
+            throw new Exception("User not found");
+        }
+
+        if (user.Password != PasswordHasher.Hash(req.Password))
+        {
+            throw new Exception("Invalid password");
+        }
+
+        var token = _tokenService.GenerateToken(user);
+
+        return new LoginResponse
+        {
+            Token = token,
+            Name = user.Name ?? "",
+            Email = user.Email ?? "",
+            Role = user.Role.ToString()
+        };
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using Agora.Application.Common;
+using Agora.Application.DTOs;
 using Agora.Application.Service;
 using Agora.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -58,4 +59,18 @@ public class UserController : ControllerBase
     [HttpDelete("{id}")]
     public Task Delete(int id)
         => _service.Delete(id);
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest req)
+    {
+        try
+        {
+            var response = await _service.Login(req);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+    }
 }

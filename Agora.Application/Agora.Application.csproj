@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Agora.Domain\Agora.Domain.csproj" />
     <ProjectReference Include="..\Agora.Infrastructure\Agora.Infrastructure.csproj" />
     <ProjectReference Include="..\Agora.Payment\Agora.Payment.csproj" />
+    <ProjectReference Include="..\Agora.Auth\Agora.Auth.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
