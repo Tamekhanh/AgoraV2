@@ -9,6 +9,7 @@ namespace Agora.Domain.Entities
         public string Content { get; set; } = string.Empty;
         public DateTime OccurredOn { get; set; }
         public DateTime? ProcessedOn { get; set; }
+        public int ErrorTime { get; set; }
         public string? Error { get; set; }
     }
 }

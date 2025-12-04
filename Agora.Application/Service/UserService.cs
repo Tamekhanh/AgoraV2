@@ -130,7 +130,8 @@ public class UserService : IUserService
                 Id = Guid.NewGuid(),
                 OccurredOn = DateTime.UtcNow,
                 Type = userRegisteredEvent.GetType().AssemblyQualifiedName!,
-                Content = JsonConvert.SerializeObject(userRegisteredEvent)
+                Content = JsonConvert.SerializeObject(userRegisteredEvent),
+                ErrorTime = 0
             };
             _db.OutboxMessages.Add(outboxMessage);
         }

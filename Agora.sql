@@ -13,6 +13,7 @@ CREATE TABLE [OutboxMessages] (
     [OccurredOn] datetime2 NOT NULL,
     [ProcessedOn] datetime2 NULL,
     [Error] nvarchar(max) NULL,
+	  [ErrorTime] int,
     CONSTRAINT [PK_OutboxMessages] PRIMARY KEY ([Id])
 );
 

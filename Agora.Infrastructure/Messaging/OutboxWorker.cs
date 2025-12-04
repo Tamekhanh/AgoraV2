@@ -50,7 +50,7 @@ namespace Agora.Infrastructure.Messaging
                 var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
 
                 var messages = await dbContext.OutboxMessages
-                    .Where(m => m.ProcessedOn == null)
+                    .Where(m => m.ProcessedOn == null && m.ErrorTime < 10)
                     .OrderBy(m => m.OccurredOn)
                     .Take(10)
                     .ToListAsync(stoppingToken);
@@ -84,7 +84,13 @@ namespace Agora.Infrastructure.Messaging
                     catch (Exception ex)
                     {
                         message.Error = ex.Message;
-                        _logger.LogError(ex, "Failed to process outbox message {Id}", message.Id);
+                        message.ErrorTime++;
+                        _logger.LogError(ex, "Failed to process outbox message {Id}. Retry count: {RetryCount}", message.Id, message.ErrorTime);
+
+                        if (message.ErrorTime >= 10)
+                        {
+                            _logger.LogError("Message {Id} has reached maximum retry attempts and will be cancelled.", message.Id);
+                        }
                     }
                 }
 
