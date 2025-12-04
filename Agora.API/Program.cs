@@ -28,24 +28,24 @@ try
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Agora API", Version = "v1" });
-
-    // Configure Swagger to use JWT Authentication
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
+        c.SwaggerDoc("v1", new OpenApiInfo { Title = "Agora API", Version = "v1" });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        // Configure Swagger to use JWT Authentication
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
         {
             new OpenApiSecurityScheme
             {
@@ -57,96 +57,96 @@ builder.Services.AddSwaggerGen(c =>
             },
             new string[] {}
         }
+        });
     });
-});
 
-builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddInfrastructure(builder.Configuration);
 
 
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddScoped<ICategoryService, CategoryService>();
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ITokenService, TokenService>();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+    builder.Services.AddAuthentication(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing")))
-    };
-
-    options.Events = new JwtBearerEvents
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
     {
-        OnTokenValidated = async context =>
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var dbContext = context.HttpContext.RequestServices.GetRequiredService<AgoraDbContext>();
-            var userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier);
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing")))
+        };
 
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
             {
-                var user = await dbContext.Users.FindAsync(userId);
-                if (user == null)
-                {
-                    context.Fail("User no longer exists.");
-                    return;
-                }
+                var dbContext = context.HttpContext.RequestServices.GetRequiredService<AgoraDbContext>();
+                var userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier);
 
-                // Kiểm tra nếu user bị ban
-                if (user.Role == -1)
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
                 {
-                    context.Fail("User is banned.");
-                    return;
-                }
+                    var user = await dbContext.Users.FindAsync(userId);
+                    if (user == null)
+                    {
+                        context.Fail("User no longer exists.");
+                        return;
+                    }
 
-                if(context.Principal == null)
+                    // Kiểm tra nếu user bị ban
+                    if (user.Role == -1)
+                    {
+                        context.Fail("User is banned.");
+                        return;
+                    }
+
+                    if (context.Principal == null)
+                    {
+                        context.Fail("Invalid token.");
+                        return;
+                    }
+
+                    // Kiểm tra role hiện tại trong DB có khớp với claim không
+                    var roleClaim = context.Principal.FindFirst(ClaimTypes.Role);
+                    if (roleClaim != null && roleClaim.Value != user.Role.ToString())
+                    {
+                        context.Fail("User role has changed. Please login again.");
+                        return;
+                    }
+                }
+                else
                 {
                     context.Fail("Invalid token.");
-                    return;
-                }
-
-                // Kiểm tra role hiện tại trong DB có khớp với claim không
-                var roleClaim = context.Principal.FindFirst(ClaimTypes.Role);
-                if (roleClaim != null && roleClaim.Value != user.Role.ToString())
-                {
-                    context.Fail("User role has changed. Please login again.");
-                    return;
                 }
             }
-            else
-            {
-                context.Fail("Invalid token.");
-            }
-        }
-    };
-});
+        };
+    });
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+    // Add services to the container.
+    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 
-var app = builder.Build();
+    var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Agora API v1"));
-}
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Agora API v1"));
+    }
 
-app.UseHttpsRedirection();
+    app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     app.MapControllers();
     app.Run();
