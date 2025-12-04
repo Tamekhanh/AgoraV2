@@ -134,7 +134,7 @@ public class UserController : ControllerBase
         {
             // Bắt các lỗi không mong muốn khác
             // Ghi log ex
-            return StatusCode(500, "An unexpected error occurred."); // Trả về 500 Internal Server Error
+            return StatusCode(500, "An unexpected error occurred: " + ex.Message); // Trả về 500 Internal Server Error
         }
     }
 }

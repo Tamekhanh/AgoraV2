@@ -306,7 +306,7 @@ public class UserService : IUserService
             Token = token,
             Name = user.Name ?? "",
             Email = user.Email ?? "",
-            Role = user.Role.ToString()
+            Role = user.Role.ToString() ?? "0",
         };
     }
 
