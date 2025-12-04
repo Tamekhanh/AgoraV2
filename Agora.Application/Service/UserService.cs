@@ -3,8 +3,10 @@ using Agora.Application.DTOs;
 using Agora.Application.Utils;
 using Agora.Auth;
 using Agora.Domain.Entities;
+using Agora.Domain.Events;
 using Agora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Agora.Application.Service;
 
@@ -118,6 +120,20 @@ public class UserService : IUserService
         user.CreatedAt = DateTime.UtcNow;
 
         _db.Users.Add(user);
+
+        // Create Outbox Message
+        if (!string.IsNullOrEmpty(user.Email))
+        {
+            var userRegisteredEvent = new UserRegisteredEvent(user.Id.ToString(), user.Email, user.Name ?? "User");
+            var outboxMessage = new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                OccurredOn = DateTime.UtcNow,
+                Type = userRegisteredEvent.GetType().AssemblyQualifiedName!,
+                Content = JsonConvert.SerializeObject(userRegisteredEvent)
+            };
+            _db.OutboxMessages.Add(outboxMessage);
+        }
 
         try
         {
