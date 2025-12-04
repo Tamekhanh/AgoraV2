@@ -109,6 +109,12 @@ builder.Services.AddAuthentication(options =>
                     return;
                 }
 
+                if(context.Principal == null)
+                {
+                    context.Fail("Invalid token.");
+                    return;
+                }
+
                 // Kiểm tra role hiện tại trong DB có khớp với claim không
                 var roleClaim = context.Principal.FindFirst(ClaimTypes.Role);
                 if (roleClaim != null && roleClaim.Value != user.Role.ToString())
