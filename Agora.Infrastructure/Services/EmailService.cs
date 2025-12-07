@@ -22,6 +22,16 @@ namespace Agora.Infrastructure.Services
         public async Task SendEmailAsync(string to, string subject, string body)
         {
             var emailSettings = _configuration.GetSection("EmailSettings");
+            
+            // Check if real email sending is enabled
+            if (!bool.TryParse(emailSettings["EnableRealEmail"], out bool enableRealEmail) || !enableRealEmail)
+            {
+                _logger.LogInformation("[TEST MODE] Simulated sending email to {To}", to);
+                _logger.LogInformation("Subject: {Subject}", subject);
+                _logger.LogInformation("Body: {Body}", body);
+                return;
+            }
+
             var host = emailSettings["Host"];
             var port = int.Parse(emailSettings["Port"] ?? "587");
             var fromEmail = emailSettings["FromEmail"];
