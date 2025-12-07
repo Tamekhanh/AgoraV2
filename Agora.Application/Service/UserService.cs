@@ -377,4 +377,24 @@ public class UserService : IUserService
 
         await _db.SaveChangesAsync();
     }
+
+    public async Task UpdateImage(int userId, int imageId)
+    {
+        try
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+    
+            user.ImageId = imageId;
+            await _db.SaveChangesAsync();
+        }
+        catch (System.Exception)
+        {
+            
+            throw;
+        }
+    }
 }

@@ -257,4 +257,22 @@ public class ShopService : IShopService
         throw;
        }
     }
+
+    public async Task UpdateImage(int shopId, int imageId)
+    {
+        try
+        {
+            var shop = await _db.Shops.FindAsync(shopId);
+            if (shop == null) return;
+    
+            shop.ImageId = imageId;
+            _db.Shops.Update(shop);
+            await _db.SaveChangesAsync();
+        }
+        catch (System.Exception)
+        {
+            
+            throw;
+        }
+    }
 }

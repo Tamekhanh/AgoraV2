@@ -15,4 +15,5 @@ public interface IUserService
     Task<LoginResponse> Login(LoginRequest req);
     Task UpdateRole(int userId, int newRoleId);
     Task UpdateAccount(int userId, UserUpdateAccount req);
+    Task UpdateImage(int userId, int imageId);
 }
