@@ -70,6 +70,7 @@ try
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddTransient<Agora.Application.EventHandlers.UserRegisteredEventHandler>();
 

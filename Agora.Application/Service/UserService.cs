@@ -128,6 +128,7 @@ public class UserService : IUserService
             Address = user.Address?.Trim(),
             TaxCode = string.IsNullOrWhiteSpace(user.TaxCode) ? null : user.TaxCode.Trim(),
             Username = string.IsNullOrWhiteSpace(user.Username) ? null : user.Username.Trim(),
+            Role = 0,
         };
 
         newUser.Password = PasswordHasher.Hash(user.Password);

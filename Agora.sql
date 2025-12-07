@@ -40,7 +40,7 @@ GO
 
 CREATE TABLE [ImageFile] (
   [id] int PRIMARY KEY IDENTITY(1, 1),
-  [imageFile] binary
+  [imageFile] varbinary(max)
 )
 GO
 

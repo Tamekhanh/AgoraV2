@@ -45,7 +45,8 @@ public class AgoraDbContext : DbContext
         // ================================
         builder.Entity<ImageFile>()
             .Property(i => i.Data)
-            .HasColumnName("ImageFile"); // map sang cột SQL
+            .HasColumnName("ImageFile") // map sang cột SQL
+            .HasColumnType("varbinary(max)");
 
         // ================================
         // 3. RELATIONSHIPS
