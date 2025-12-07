@@ -24,20 +24,41 @@ public class UserController : ControllerBase
 
     [Authorize(Roles = "1, 2")]
     [HttpGet]
-    public Task<PagedResult<UserDTO>> GetPaged([FromQuery] PagedRequest req)
+    public async Task<ActionResult<PagedResult<UserDTO>>> GetPaged([FromQuery] PagedRequest req)
     {
-        _logger.LogInformation("\u001b[44;97m[User]\u001b[0m Fetching paged users.");
-        return _service.GetPaged(req);
+        try
+        {
+            _logger.LogInformation("\u001b[44;97m[User]\u001b[0m Fetching paged users.");
+            var result = await _service.GetPaged(req);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "\u001b[44;97m[User]\u001b[0m Error occurred while fetching paged users.");
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = "1, 2")]
     [HttpGet("{id}")]
-    public Task<UserDTO?> GetById(int id)
+    public async Task<ActionResult<UserDTO?>> GetById(int id)
     {
-        _logger.LogInformation("\u001b[44;97m[User]\u001b[0m Fetching user with ID {UserId}.", id);
-        return _service.GetById(id);
+        try
+        {
+            _logger.LogInformation("\u001b[44;97m[User]\u001b[0m Fetching user with ID {UserId}.", id);
+            var user = await _service.GetById(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "\u001b[44;97m[User]\u001b[0m Error occurred while fetching user with ID {UserId}.", id);
+            return BadRequest(ex.Message);
+        }
     }
-
     [HttpPost]
     public async Task<IActionResult> Create(UserCreateDTO user)
     {
