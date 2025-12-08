@@ -90,6 +90,24 @@ public class ImageService : IImageService
         }
     }
 
+    public async Task UpdateProductImage(int productId, IFormFile file)
+    {
+        var product = await _db.Products.FindAsync(productId);
+        if (product == null) throw new Exception("Product not found");
+
+        var oldImageId = product.ImageId;
+        var newImageId = await Create(file);
+
+        product.ImageId = newImageId;
+        _db.Products.Update(product);
+        await _db.SaveChangesAsync();
+
+        if (oldImageId.HasValue)
+        {
+            await Delete(oldImageId.Value);
+        }
+    }
+
     public async Task<ImageDTO?> GetById(int id, bool? ReSize = false, bool? isSmall = null, int? width = null, int? height = null)
     {
         var image = await _db.ImageFiles.FindAsync(id);
