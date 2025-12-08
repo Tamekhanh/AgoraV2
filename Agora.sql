@@ -177,3 +177,6 @@ GO
 
 ALTER TABLE [Payment] ADD FOREIGN KEY ([orderId]) REFERENCES [Order] ([id])
 GO
+
+ALTER TABLE [ImageFile] ALTER COLUMN [ImageFile] varbinary(max);
+GO

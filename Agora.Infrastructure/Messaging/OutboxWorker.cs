@@ -38,7 +38,7 @@ namespace Agora.Infrastructure.Messaging
                     _logger.LogError(ex, "Error processing outbox messages");
                 }
 
-                await Task.Delay(30000, stoppingToken); // Poll every 30 seconds
+                await Task.Delay(300000, stoppingToken); // Poll every 5 minutes
             }
         }
 
