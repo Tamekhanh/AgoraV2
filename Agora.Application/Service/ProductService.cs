@@ -322,4 +322,14 @@ public class ProductService : IProductService
             throw;
         }
     }
+
+    public async Task<int> GetProductStock(int productId)
+    {
+        var product = await _db.Products.FindAsync(productId);
+        if (product == null)
+        {
+            throw new ArgumentException("Product not found.");
+        }
+        return product.StockQty ?? 0;
+    }
 }

@@ -72,6 +72,7 @@ builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddTransient<Agora.Application.EventHandlers.UserRegisteredEventHandler>();
 

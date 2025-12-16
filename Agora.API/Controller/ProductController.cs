@@ -229,4 +229,25 @@ public class ProductController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the product: " + ex.Message);
         }
     }
+
+    [HttpGet("stock/{productId}")]
+    public async Task<IActionResult> GetProductStock(int productId)
+    {
+        try
+        {
+            var stock = await _service.GetProductStock(productId);
+            return Ok(stock);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("\u001b[32m[PRODUCT]\u001b[0mProduct with ID: {ProductId} not found when getting stock.", productId);
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "\u001b[32m[PRODUCT]\u001b[0mAn error occurred while getting the product stock.");
+            _logger.LogError(ex, "\u001b[32m[PRODUCT]\u001b[0mError: {Message}", ex.Message);
+            return StatusCode(500, "An error occurred while getting the product stock: " + ex.Message);
+        }
+    }
 }

@@ -15,4 +15,6 @@ public interface IProductService
     Task UpdateImage(int productId, int imageId);
 
     Task<ProductDTO?> GetByShopId(int shopId);
+
+    Task<int> GetProductStock(int productId);
 }
