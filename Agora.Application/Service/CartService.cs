@@ -22,7 +22,7 @@ namespace Agora.Application.Service
             _productService = productService;
         }
 
-        public async Task<CartDTO> GetCartAsync(int userId)
+        public async Task<CartDTO> GetCart(int userId)
         {
             try
             {
@@ -81,7 +81,7 @@ namespace Agora.Application.Service
             }
         }
 
-        public async Task AddToCartAsync(int userId, AddToCartRequest request)
+        public async Task AddToCart(int userId, AddToCartRequest request)
         {
             try
             {
@@ -138,7 +138,7 @@ namespace Agora.Application.Service
             }
         }
 
-        public async Task UpdateCartItemAsync(int userId, UpdateCartItemRequest request)
+        public async Task UpdateCartItem(int userId, UpdateCartItemRequest request)
         {
             try
             {
@@ -175,7 +175,7 @@ namespace Agora.Application.Service
             }
         }
 
-        public async Task RemoveFromCartAsync(int userId, int productId)
+        public async Task RemoveFromCart(int userId, int productId)
         {
             try
             {
@@ -201,7 +201,7 @@ namespace Agora.Application.Service
             }
         }
 
-        public async Task ClearCartAsync(int userId)
+        public async Task ClearCart(int userId)
         {
             try
             {

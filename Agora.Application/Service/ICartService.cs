@@ -5,11 +5,11 @@ namespace Agora.Application.Service
 {
     public interface ICartService
     {
-        Task<CartDTO> GetCartAsync(int userId);
-        Task AddToCartAsync(int userId, AddToCartRequest request);
-        Task UpdateCartItemAsync(int userId, UpdateCartItemRequest request);
-        Task RemoveFromCartAsync(int userId, int productId);
-        Task ClearCartAsync(int userId);
+        Task<CartDTO> GetCart(int userId);
+        Task AddToCart(int userId, AddToCartRequest request);
+        Task UpdateCartItem(int userId, UpdateCartItemRequest request);
+        Task RemoveFromCart(int userId, int productId);
+        Task ClearCart(int userId);
         Task IncreaseCartItem(int userId, int productId);
         Task DecreaseCartItem(int userId, int productId);
     }

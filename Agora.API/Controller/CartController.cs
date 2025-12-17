@@ -37,7 +37,7 @@ namespace Agora.API.Controllers //  Admin/Staff không thể truy cập giỏ h�
             {
                 _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mGetting cart for user.");
                 var userId = GetUserId();
-                var cart = await _cartService.GetCartAsync(userId);
+                var cart = await _cartService.GetCart(userId);
                 return Ok(cart);
             }
             catch (ArgumentException ex)
@@ -64,7 +64,7 @@ namespace Agora.API.Controllers //  Admin/Staff không thể truy cập giỏ h�
             {
                 var userId = GetUserId();
                 _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mAdding item {ProductId} to cart for user {UserId}.", request.ProductId, userId);
-                await _cartService.AddToCartAsync(userId, request);
+                await _cartService.AddToCart(userId, request);
                 return Ok();
             }
             catch (ArgumentException ex)
@@ -92,7 +92,7 @@ namespace Agora.API.Controllers //  Admin/Staff không thể truy cập giỏ h�
             {
                 var userId = GetUserId();
                 _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mUpdating item {ProductId} in cart for user {UserId}.", request.ProductId, userId);
-                await _cartService.UpdateCartItemAsync(userId, request);
+                await _cartService.UpdateCartItem(userId, request);
                 return Ok();
             }
             catch (ArgumentException ex)
@@ -120,7 +120,7 @@ namespace Agora.API.Controllers //  Admin/Staff không thể truy cập giỏ h�
             {
                 var userId = GetUserId();
                 _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mRemoving item {ProductId} from cart for user {UserId}.", productId, userId);
-                await _cartService.RemoveFromCartAsync(userId, productId);
+                await _cartService.RemoveFromCart(userId, productId);
                 return Ok();
             }
             catch (ArgumentException ex)
@@ -148,7 +148,7 @@ namespace Agora.API.Controllers //  Admin/Staff không thể truy cập giỏ h�
             {
                 var userId = GetUserId();
                 _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mClearing cart for user {UserId}.", userId);
-                await _cartService.ClearCartAsync(userId);
+                await _cartService.ClearCart(userId);
                 return Ok();
             }
             catch (ArgumentException ex)
