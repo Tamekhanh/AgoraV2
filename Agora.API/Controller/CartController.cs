@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Agora.API.Controllers
+namespace Agora.API.Controllers //  Admin/Staff không thể truy cập giỏ hàng của user khác mà chỉ có thể thao tác trên giỏ hàng của chính mình
 {
-    [Authorize]
+    [Authorize] 
     [ApiController]
     [Route("api/cart")]
     public class CartController : ControllerBase
@@ -164,6 +164,62 @@ namespace Agora.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError clearing cart for user {UserId}.", GetUserId());
+                _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError: {Message}", ex.Message);
+                return StatusCode(500, "An error occurred while retrieving the cart. " + ex.Message);
+            }
+        }
+
+        [HttpPost("items/{productId}/increase")]
+        public async Task<IActionResult> IncreaseCartItem(int productId)
+        {
+            try
+            {
+                var userId = GetUserId();
+                _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mIncreasing item {ProductId} in cart for user {UserId}.", productId, userId);
+                await _cartService.IncreaseCartItem(userId, productId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError increasing item {ProductId} in cart for user {UserId}.", productId, GetUserId());
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogError("\u001b[44;97m[Cart]\u001b[0mUnauthorized access when increasing item {ProductId} in cart for user {UserId}.", productId, GetUserId());
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError increasing item {ProductId} in cart for user {UserId}.", productId, GetUserId());
+                _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError: {Message}", ex.Message);
+                return StatusCode(500, "An error occurred while retrieving the cart. " + ex.Message);
+            }
+        }
+
+        [HttpPost("items/{productId}/decrease")]
+        public async Task<IActionResult> DecreaseCartItem(int productId)
+        {
+            try
+            {
+                var userId = GetUserId();
+                _logger.LogInformation("\u001b[44;97m[Cart]\u001b[0mDecreasing item {ProductId} in cart for user {UserId}.", productId, userId);
+                await _cartService.DecreaseCartItem(userId, productId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError decreasing item {ProductId} in cart for user {UserId}.", productId, GetUserId());
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogError("\u001b[44;97m[Cart]\u001b[0mUnauthorized access when decreasing item {ProductId} in cart for user {UserId}.", productId, GetUserId());
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError decreasing item {ProductId} in cart for user {UserId}.", productId, GetUserId());
                 _logger.LogError(ex, "\u001b[44;97m[Cart]\u001b[0mError: {Message}", ex.Message);
                 return StatusCode(500, "An error occurred while retrieving the cart. " + ex.Message);
             }

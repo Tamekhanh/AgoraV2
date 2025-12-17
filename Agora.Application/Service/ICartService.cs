@@ -10,5 +10,7 @@ namespace Agora.Application.Service
         Task UpdateCartItemAsync(int userId, UpdateCartItemRequest request);
         Task RemoveFromCartAsync(int userId, int productId);
         Task ClearCartAsync(int userId);
+        Task IncreaseCartItem(int userId, int productId);
+        Task DecreaseCartItem(int userId, int productId);
     }
 }
