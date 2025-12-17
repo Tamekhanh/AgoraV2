@@ -73,8 +73,11 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddTransient<Agora.Application.EventHandlers.UserRegisteredEventHandler>();
+builder.Services.AddTransient<Agora.Application.EventHandlers.PaymentCompletedEventHandler>();
 
     builder.Services.AddAuthentication(options =>
     {
@@ -150,6 +153,7 @@ using (var scope = app.Services.CreateScope())
 {
     var eventBus = scope.ServiceProvider.GetRequiredService<Agora.Domain.Interfaces.IEventBus>();
     await eventBus.Subscribe<Agora.Domain.Events.UserRegisteredEvent, Agora.Application.EventHandlers.UserRegisteredEventHandler>();
+    await eventBus.Subscribe<Agora.Domain.Events.PaymentCompletedEvent, Agora.Application.EventHandlers.PaymentCompletedEventHandler>();
 }
 
 // Configure the HTTP request pipeline.

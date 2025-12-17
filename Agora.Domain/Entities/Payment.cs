@@ -12,6 +12,7 @@ namespace Agora.Domain.Entities
         public string? Method { get; set; }
         public string? Status { get; set; }
         public string? TransactionId { get; set; }
+        public string? IdempotencyKey { get; set; }
         public DateTime? PaymentDate { get; set; }
 
         // Navigation Properties
