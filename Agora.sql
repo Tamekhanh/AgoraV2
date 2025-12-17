@@ -180,3 +180,15 @@ GO
 
 ALTER TABLE [ImageFile] ALTER COLUMN [ImageFile] varbinary(max);
 GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[Payment]') AND name = 'TransactionId')
+BEGIN
+    ALTER TABLE [Payment] ADD [TransactionId] nvarchar(max) NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[Payment]') AND name = 'IdempotencyKey')
+BEGIN
+    ALTER TABLE [Payment] ADD [IdempotencyKey] nvarchar(450) NULL;
+END
+GO

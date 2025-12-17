@@ -38,6 +38,9 @@ public class AgoraDbContext : DbContext
         builder.Entity<Order>().ToTable("Order");
         builder.Entity<OrderItem>().ToTable("OrderItem");
         builder.Entity<Payment>().ToTable("Payment");
+        builder.Entity<Payment>()
+            .HasIndex(p => p.IdempotencyKey)
+            .IsUnique();
         builder.Entity<ImageFile>().ToTable("ImageFile");
 
         // ================================
