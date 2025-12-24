@@ -41,7 +41,10 @@ namespace Agora.Application.Service
             }
 
             // 2. Demo Payment Logic
-            bool isSuccess = request.Amount > 0;
+            // SIMULATION: 80% failure rate (only 20% success chance)
+            // Random 0-99. If < 80 (0-79) => Fail. If >= 80 (80-99) => Success.
+            bool isSuccess = request.Amount > 0 && (new Random().Next(100) >= 80);
+            
             string transactionId = Guid.NewGuid().ToString();
             string status = isSuccess ? "Completed" : "Failed";
 

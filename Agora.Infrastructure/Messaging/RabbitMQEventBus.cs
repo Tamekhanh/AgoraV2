@@ -2,9 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Agora.Domain.Entities;
 using Agora.Domain.Events;
 using Agora.Domain.Interfaces;
+using Agora.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -14,7 +19,8 @@ namespace Agora.Infrastructure.Messaging
     public class RabbitMQEventBus : IEventBus, IDisposable
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly string _hostname = "localhost";
+        private readonly ILogger<RabbitMQEventBus> _logger;
+        private readonly string _hostname;
         private readonly string _exchangeName = "agora_event_bus";
         private readonly string _queueName = "agora_queue";
         
@@ -24,9 +30,11 @@ namespace Agora.Infrastructure.Messaging
         private readonly Dictionary<string, Type> _eventTypes;
         private bool _isDisposed;
 
-        public RabbitMQEventBus(IServiceProvider serviceProvider)
+        public RabbitMQEventBus(IServiceProvider serviceProvider, IConfiguration configuration, ILogger<RabbitMQEventBus> logger)
         {
             _serviceProvider = serviceProvider;
+            _logger = logger;
+            _hostname = configuration["RabbitMQ:HostName"] ?? "localhost";
             _handlers = new Dictionary<string, List<Type>>();
             _eventTypes = new Dictionary<string, Type>();
         }
@@ -105,21 +113,53 @@ namespace Agora.Infrastructure.Messaging
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AgoraDbContext>();
                     var subscriptions = _handlers[eventName];
+                    
                     foreach (var handlerType in subscriptions)
                     {
                         var handler = scope.ServiceProvider.GetService(handlerType);
                         if (handler == null) continue;
 
                         var eventType = _eventTypes[eventName];
-                        var integrationEvent = JsonConvert.DeserializeObject(message, eventType);
+                        var integrationEvent = JsonConvert.DeserializeObject(message, eventType) as IntegrationEvent;
                         if (integrationEvent == null) continue;
+
+                        // Idempotency Check
+                        var consumerName = handlerType.Name;
+                        var messageId = integrationEvent.Id.ToString();
+
+                        var alreadyProcessed = await dbContext.ProcessedMessages
+                            .AnyAsync(pm => pm.MessageId == messageId && pm.ConsumerName == consumerName);
+
+                        if (alreadyProcessed)
+                        {
+                            _logger.LogInformation("Message {MessageId} already processed by {ConsumerName}", messageId, consumerName);
+                            continue;
+                        }
 
                         var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
                         var method = concreteType.GetMethod("Handle");
                         if (method != null)
                         {
-                            await (Task)method.Invoke(handler, new object[] { integrationEvent })!;
+                            try 
+                            {
+                                await (Task)method.Invoke(handler, new object[] { integrationEvent })!;
+                                
+                                // Save processed message
+                                dbContext.ProcessedMessages.Add(new ProcessedMessage
+                                {
+                                    MessageId = messageId,
+                                    ConsumerName = consumerName,
+                                    ProcessedOn = DateTime.UtcNow
+                                });
+                                await dbContext.SaveChangesAsync();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Error handling event {EventName} with {Handler}", eventName, consumerName);
+                                // Optionally handle retry logic here or let it fail to DLQ (if configured)
+                            }
                         }
                     }
                 }

@@ -21,6 +21,7 @@ public class AgoraDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<ImageFile> ImageFiles => Set<ImageFile>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<ProcessedMessage> ProcessedMessages => Set<ProcessedMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -42,6 +43,9 @@ public class AgoraDbContext : DbContext
             .HasIndex(p => p.IdempotencyKey)
             .IsUnique();
         builder.Entity<ImageFile>().ToTable("ImageFile");
+        builder.Entity<ProcessedMessage>().ToTable("ProcessedMessage")
+            .HasIndex(p => new { p.MessageId, p.ConsumerName })
+            .IsUnique();
 
         // ================================
         // 2. SPECIAL COLUMN CONFIG

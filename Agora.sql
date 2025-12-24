@@ -192,3 +192,16 @@ BEGIN
     ALTER TABLE [Payment] ADD [IdempotencyKey] nvarchar(450) NULL;
 END
 GO
+
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[ProcessedMessage]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [ProcessedMessage] (
+    [Id] uniqueidentifier NOT NULL,
+    [MessageId] nvarchar(450) NOT NULL,
+    [ConsumerName] nvarchar(450) NOT NULL,
+    [ProcessedOn] datetime2 NOT NULL,
+    CONSTRAINT [PK_ProcessedMessage] PRIMARY KEY ([Id])
+);
+CREATE UNIQUE INDEX [IX_ProcessedMessage_MessageId_ConsumerName] ON [ProcessedMessage] ([MessageId], [ConsumerName]);
+END
+GO

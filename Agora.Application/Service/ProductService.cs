@@ -332,4 +332,53 @@ public class ProductService : IProductService
         }
         return product.StockQty ?? 0;
     }
+
+    public async Task<bool> ReserveStock(int orderId)
+    {
+        try
+        {
+            var orderItems = await _db.OrderItems.Where(x => x.OrderId == orderId).ToListAsync();
+            foreach (var item in orderItems)
+            {
+                if (item.ProductId == null || item.Quantity == null) continue;
+
+                var product = await _db.Products.FindAsync(item.ProductId);
+                if (product == null || (product.StockQty ?? 0) < item.Quantity)
+                {
+                    return false;
+                }
+                product.StockQty = (product.StockQty ?? 0) - item.Quantity;
+            }
+            await _db.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reserving stock for order {OrderId}", orderId);
+            return false;
+        }
+    }
+
+    public async Task ReleaseStock(int orderId)
+    {
+        try
+        {
+            var orderItems = await _db.OrderItems.Where(x => x.OrderId == orderId).ToListAsync();
+            foreach (var item in orderItems)
+            {
+                if (item.ProductId == null || item.Quantity == null) continue;
+
+                var product = await _db.Products.FindAsync(item.ProductId);
+                if (product != null)
+                {
+                    product.StockQty = (product.StockQty ?? 0) + item.Quantity;
+                }
+            }
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error releasing stock for order {OrderId}", orderId);
+        }
+    }
 }

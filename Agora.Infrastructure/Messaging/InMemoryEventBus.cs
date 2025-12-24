@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Agora.Domain.Entities;
 using Agora.Domain.Events;
 using Agora.Domain.Interfaces;
+using Agora.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -32,7 +35,9 @@ namespace Agora.Infrastructure.Messaging
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AgoraDbContext>();
                     var subscriptions = _handlers[eventName];
+                    
                     foreach (var handlerType in subscriptions)
                     {
                         _logger.LogInformation("Dispatching to handler {HandlerType}", handlerType.Name);
@@ -43,13 +48,43 @@ namespace Agora.Infrastructure.Messaging
                             continue;
                         }
 
+                        // Idempotency Check
+                        var consumerName = handlerType.Name;
+                        var messageId = @event.Id.ToString();
+
+                        var alreadyProcessed = await dbContext.ProcessedMessages
+                            .AnyAsync(pm => pm.MessageId == messageId && pm.ConsumerName == consumerName);
+
+                        if (alreadyProcessed)
+                        {
+                            _logger.LogInformation("Message {MessageId} already processed by {ConsumerName}", messageId, consumerName);
+                            continue;
+                        }
+
                         var eventType = _eventTypes[eventName];
-                        
                         var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
                         var method = concreteType.GetMethod("Handle");
+                        
                         if (method != null)
                         {
-                            await (Task)method.Invoke(handler, new object[] { @event })!;
+                            try 
+                            {
+                                await (Task)method.Invoke(handler, new object[] { @event })!;
+                                
+                                // Save processed message
+                                dbContext.ProcessedMessages.Add(new ProcessedMessage
+                                {
+                                    Id = Guid.NewGuid(),
+                                    MessageId = messageId,
+                                    ConsumerName = consumerName,
+                                    ProcessedOn = DateTime.UtcNow
+                                });
+                                await dbContext.SaveChangesAsync();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Error handling event {EventName} with {Handler}", eventName, consumerName);
+                            }
                         }
                     }
                 }

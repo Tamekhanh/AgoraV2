@@ -83,6 +83,11 @@ try
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddTransient<Agora.Application.EventHandlers.UserRegisteredEventHandler>();
     builder.Services.AddTransient<Agora.Application.EventHandlers.PaymentCompletedEventHandler>();
+    builder.Services.AddTransient<Agora.Application.EventHandlers.OrderCreatedEventHandler>();
+    builder.Services.AddTransient<Agora.Application.EventHandlers.StockReservedEventHandler>();
+    builder.Services.AddTransient<Agora.Application.EventHandlers.PaymentFailedEventHandler>();
+    builder.Services.AddTransient<Agora.Application.EventHandlers.StockReservationFailedEventHandler>();
+    builder.Services.AddTransient<Agora.Application.EventHandlers.OrderCancelledEventHandler>();
 
     builder.Services.AddAuthentication(options =>
     {
@@ -159,6 +164,12 @@ try
         var eventBus = scope.ServiceProvider.GetRequiredService<Agora.Domain.Interfaces.IEventBus>();
         await eventBus.Subscribe<Agora.Domain.Events.UserRegisteredEvent, Agora.Application.EventHandlers.UserRegisteredEventHandler>();
         await eventBus.Subscribe<Agora.Domain.Events.PaymentCompletedEvent, Agora.Application.EventHandlers.PaymentCompletedEventHandler>();
+        
+        await eventBus.Subscribe<Agora.Domain.Events.OrderCreatedEvent, Agora.Application.EventHandlers.OrderCreatedEventHandler>();
+        await eventBus.Subscribe<Agora.Domain.Events.StockReservedEvent, Agora.Application.EventHandlers.StockReservedEventHandler>();
+        await eventBus.Subscribe<Agora.Domain.Events.PaymentFailedEvent, Agora.Application.EventHandlers.PaymentFailedEventHandler>();
+        await eventBus.Subscribe<Agora.Domain.Events.StockReservationFailedEvent, Agora.Application.EventHandlers.StockReservationFailedEventHandler>();
+        await eventBus.Subscribe<Agora.Domain.Events.OrderCancelledEvent, Agora.Application.EventHandlers.OrderCancelledEventHandler>();
     }
 
     // Configure the HTTP request pipeline.

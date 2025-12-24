@@ -6,6 +6,8 @@ using Agora.Domain.Entities;
 using Agora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Agora.Application.Common;
+using Agora.Domain.Events;
+using Newtonsoft.Json;
 
 namespace Agora.Application.Service
 {
@@ -33,71 +35,112 @@ namespace Agora.Application.Service
 
             // 2. Calculate Total Amount
             int totalAmount = 0;
+            int totalDiscount = 0;
             foreach (var item in cart.CartItems)
             {
                 if (item.Product != null && item.Product.RetailPrice.HasValue && item.Quantity.HasValue)
                 {
-                    totalAmount += item.Product.RetailPrice.Value * item.Quantity.Value;
+                    var price = item.Product.RetailPrice.Value;
+                    var quantity = item.Quantity.Value;
+                    var discountPercent = item.Product.DiscountPercent ?? 0;
+
+                    var rawTotal = price * quantity;
+                    var discountAmount = (int)(rawTotal * (discountPercent / 100.0));
+                    
+                    totalDiscount += discountAmount;
+                    totalAmount += (rawTotal - discountAmount);
                 }
             }
 
             // 3. Create Order
-            var order = new Order
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                UserId = request.UserId,
-                OrderDate = DateTime.UtcNow,
-                TotalAmount = totalAmount,
-                PaymentStatus = "Pending", // Waiting for payment
-                OrderStatus = 0, // 0: Pending
-                // ShippingAddress is not in Order entity based on previous read, let's check Order entity again or just ignore if not present.
-                // Checking Order entity again...
-                Note = request.Note,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            // Note: Order entity definition read previously:
-            // public int? TotalAmount { get; set; }
-            // public string? PaymentStatus { get; set; }
-            // public int? OrderStatus { get; set; }
-            // public string? Note { get; set; }
-            // It does NOT have ShippingAddress. I will ignore ShippingAddress for now or put it in Note.
-            if (!string.IsNullOrEmpty(request.ShippingAddress))
-            {
-                order.Note = $"Address: {request.ShippingAddress}. " + order.Note;
-            }
-
-            _context.Orders.Add(order);
-            
-            // 4. Create OrderItems
-            foreach (var cartItem in cart.CartItems)
-            {
-                if (cartItem.Product != null)
+                var order = new Order
                 {
-                    var orderItem = new OrderItem
-                    {
-                        Order = order,
-                        ProductId = cartItem.ProductId,
-                        Quantity = cartItem.Quantity,
-                        UnitPrice = cartItem.Product.RetailPrice,
-                        Total = (cartItem.Product.RetailPrice ?? 0) * (cartItem.Quantity ?? 0)
-                    };
-                    _context.OrderItems.Add(orderItem);
+                    UserId = request.UserId,
+                    OrderDate = DateTime.UtcNow,
+                    TotalAmount = totalAmount,
+                    Discount = totalDiscount,
+                    PaymentStatus = "Pending", // Waiting for payment
+                    OrderStatus = 0, // 0: Pending
+                    Note = request.Note,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                if (!string.IsNullOrEmpty(request.ShippingAddress))
+                {
+                    order.Note = $"Address: {request.ShippingAddress}. " + order.Note;
                 }
+
+                _context.Orders.Add(order);
+                
+                // 4. Create OrderItems
+                foreach (var cartItem in cart.CartItems)
+                {
+                    if (cartItem.Product != null)
+                    {
+                        // CHECK AND DEDUCT STOCK SYNCHRONOUSLY
+                        if ((cartItem.Product.StockQty ?? 0) < (cartItem.Quantity ?? 0))
+                        {
+                            throw new Exception($"Insufficient stock for product: {cartItem.Product.Name}");
+                        }
+                        cartItem.Product.StockQty = (cartItem.Product.StockQty ?? 0) - (cartItem.Quantity ?? 0);
+
+                        var price = cartItem.Product.RetailPrice ?? 0;
+                        var quantity = cartItem.Quantity ?? 0;
+                        var discountPercent = cartItem.Product.DiscountPercent ?? 0;
+                        
+                        var rawTotal = price * quantity;
+                        var discountAmount = (int)(rawTotal * (discountPercent / 100.0));
+                        var finalTotal = rawTotal - discountAmount;
+
+                        var orderItem = new OrderItem
+                        {
+                            Order = order,
+                            ProductId = cartItem.ProductId,
+                            Quantity = cartItem.Quantity,
+                            UnitPrice = cartItem.Product.RetailPrice,
+                            Discount = discountAmount,
+                            Total = finalTotal
+                        };
+                        _context.OrderItems.Add(orderItem);
+                    }
+                }
+
+                // 5. Clear Cart
+                _context.CartItems.RemoveRange(cart.CartItems);
+
+                // Save to get Order ID
+                await _context.SaveChangesAsync();
+
+                // 6. Add Outbox Message
+                var orderCreatedEvent = new OrderCreatedEvent(order.Id, request.UserId, totalAmount);
+                var outboxMessage = new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    Type = orderCreatedEvent.GetType().AssemblyQualifiedName!,
+                    Content = JsonConvert.SerializeObject(orderCreatedEvent),
+                    OccurredOn = DateTime.UtcNow
+                };
+                _context.OutboxMessages.Add(outboxMessage);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return new CheckoutResponse
+                {
+                    OrderId = order.Id,
+                    TotalAmount = totalAmount,
+                    Message = "Order created successfully. Saga started."
+                };
             }
-
-            // 5. Clear Cart
-            _context.CartItems.RemoveRange(cart.CartItems);
-
-            // 6. Save Changes
-            await _context.SaveChangesAsync();
-
-            return new CheckoutResponse
+            catch
             {
-                OrderId = order.Id,
-                TotalAmount = totalAmount,
-                Message = "Order created successfully. Please proceed to payment."
-            };
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<PagedResult<OrderDTO>> GetOrders(int userId, PagedRequest req)

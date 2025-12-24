@@ -17,4 +17,7 @@ public interface IProductService
     Task<ProductDTO?> GetByShopId(int shopId);
 
     Task<int> GetProductStock(int productId);
+    
+    Task<bool> ReserveStock(int orderId);
+    Task ReleaseStock(int orderId);
 }

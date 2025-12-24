@@ -9,10 +9,12 @@ namespace Agora.Application.EventHandlers
     public class PaymentCompletedEventHandler : IIntegrationEventHandler<PaymentCompletedEvent>
     {
         private readonly AgoraDbContext _context;
+        private readonly IEventBus _eventBus;
 
-        public PaymentCompletedEventHandler(AgoraDbContext context)
+        public PaymentCompletedEventHandler(AgoraDbContext context, IEventBus eventBus)
         {
             _context = context;
+            _eventBus = eventBus;
         }
 
         public async Task Handle(PaymentCompletedEvent @event)
@@ -28,6 +30,8 @@ namespace Agora.Application.EventHandlers
 
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
+
+                await _eventBus.Publish(new OrderConfirmedEvent(@event.OrderId));
             }
         }
     }
