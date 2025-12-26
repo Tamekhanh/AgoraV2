@@ -16,10 +16,18 @@ public static class ServiceRegistration
             options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
 
         services.AddTransient<IEmailService, EmailService>();
-        
-        // Use InMemoryEventBus for development if RabbitMQ is not available
-        services.AddSingleton<IEventBus, InMemoryEventBus>();
-        // services.AddSingleton<IEventBus, RabbitMQEventBus>();
+
+        // Chọn EventBus dựa vào cấu hình: ưu tiên RabbitMQ nếu cấu hình bật
+        var useRabbitMq = config.GetValue<bool>("UseRabbitMQ");
+        if (useRabbitMq)
+        {
+            services.AddSingleton<IEventBus, RabbitMQEventBus>();
+        }
+        else
+        {
+            // Mặc định dùng InMemoryEventBus khi không có RabbitMQ
+            services.AddSingleton<IEventBus, InMemoryEventBus>();
+        }
         
         services.AddHostedService<OutboxWorker>();
 
