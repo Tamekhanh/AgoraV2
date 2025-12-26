@@ -28,6 +28,20 @@ namespace Agora.Application.EventHandlers
                 // Update order status if needed, e.g., to "Processing"
                 // order.OrderStatus = 1; // Assuming 1 is Processing
 
+                // Increase SoldQty for each product in the order
+                var orderItems = await _context.OrderItems
+                    .Include(oi => oi.Product)
+                    .Where(oi => oi.OrderId == @event.OrderId)
+                    .ToListAsync();
+
+                foreach (var item in orderItems)
+                {
+                    if (item.Product != null && item.Quantity.HasValue && item.Quantity.Value > 0)
+                    {
+                        item.Product.SoldQty = (item.Product.SoldQty ?? 0) + item.Quantity.Value;
+                    }
+                }
+
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
 
