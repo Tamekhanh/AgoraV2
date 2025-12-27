@@ -289,8 +289,8 @@ public class ImageController : ControllerBase
 
                 var cacheOptions = new MemoryCacheEntryOptions()
                     .SetSize(1) // each entry size is 1
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(30)) // expire after 30 minutes
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(10)); // expire if not accessed for 10 minutes
+                    .SetAbsoluteExpiration(TimeSpan.FromDays(2)) // expire after 2 day
+                    .SetSlidingExpiration(TimeSpan.FromHours(24)); // expire if not accessed for 24 hours
 
                 _cache.Set(cacheKey, allVersions, cacheOptions);
             }
