@@ -46,6 +46,7 @@ public class AgoraDbContext : DbContext
         builder.Entity<ProcessedMessage>().ToTable("ProcessedMessage")
             .HasIndex(p => new { p.MessageId, p.ConsumerName })
             .IsUnique();
+        builder.Entity<OutboxMessage>().ToTable("OutboxMessages");
 
         // ================================
         // 2. SPECIAL COLUMN CONFIG
