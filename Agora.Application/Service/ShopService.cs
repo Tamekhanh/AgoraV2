@@ -99,6 +99,38 @@ public class ShopService : IShopService
             {
                 throw new ArgumentException("User already has a shop.");
             }
+            if (string.IsNullOrEmpty(request.Name))
+            {
+                throw new ArgumentException("Shop name is required.");
+            }
+            if (string.IsNullOrEmpty(request.ContactName))
+            {
+                throw new ArgumentException("Contact name is required.");
+            }
+            if (string.IsNullOrEmpty(request.Phone))
+            {
+                throw new ArgumentException("Phone number is required.");
+            }
+            if (string.IsNullOrEmpty(request.Email))
+            {
+                throw new ArgumentException("Email is required.");
+            }
+            if(string.IsNullOrEmpty(request.UserId.ToString()))
+            {
+                throw new ArgumentException("User ID is required.");
+            }
+            if(await _db.Users.FindAsync(request.UserId) == null)
+            {
+                throw new ArgumentException("User does not exist.");
+            }
+            if(string.IsNullOrWhiteSpace(request.Name) && await _db.Shops.AnyAsync(s => s.Name == request.Name))
+            {
+                throw new ArgumentException("Shop name already exists.");
+            }
+            if (string.IsNullOrWhiteSpace(request.Phone) && await _db.Shops.AnyAsync(s => s.Phone == request.Phone))
+            {
+                throw new ArgumentException("Phone number already exists.");
+            }
             var shop = new Shop
             {
                 Name = request.Name,
