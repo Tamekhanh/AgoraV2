@@ -69,6 +69,11 @@ public class UserController : ControllerBase
             _logger.LogInformation("\u001b[44;97m[User]\u001b[0m User created successfully with ID {UserId}.", createdUser.Id);
             return Ok(createdUser);
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogError(ex, "\u001b[44;97m[User]\u001b[0m Invalid argument while creating a new user: {ErrorMessage}", ex.Message);
+            return BadRequest(ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "\u001b[44;97m[User]\u001b[0m Error occurred while creating a new user.");

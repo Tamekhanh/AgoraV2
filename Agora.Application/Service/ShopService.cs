@@ -95,6 +95,10 @@ public class ShopService : IShopService
     {
         try
         {
+            if(await _db.Shops.AnyAsync(s => s.UserId == request.UserId))
+            {
+                throw new ArgumentException("User already has a shop.");
+            }
             var shop = new Shop
             {
                 Name = request.Name,
